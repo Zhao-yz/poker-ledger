@@ -43,6 +43,9 @@ export default async function RootLayout({
                 <Link href="/sessions" className="text-muted hover:text-foreground">
                   Sessions
                 </Link>
+                <Link href="/hands" className="text-muted hover:text-foreground">
+                  Hands
+                </Link>
                 <Link href="/starred" className="text-muted hover:text-foreground">
                   Starred
                 </Link>
