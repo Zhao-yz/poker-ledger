@@ -40,6 +40,9 @@ export default async function RootLayout({
             </Link>
             {user && (
               <>
+                <Link href="/" className="text-muted hover:text-foreground">
+                  Dashboard
+                </Link>
                 <Link href="/sessions" className="text-muted hover:text-foreground">
                   Sessions
                 </Link>
