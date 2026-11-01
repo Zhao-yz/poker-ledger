@@ -13,7 +13,14 @@ export type DashboardStats = {
   bestMonth: { month: string; net: number } | null;
   cumulative: { date: string; net: number; cumulative: number }[];
   byMonth: { month: string; net: number; hours: number }[];
+  /** Sessions that started before EARLY_CUTOFF vs. at or after it. */
+  byStart: { early: Bucket; late: Bucket };
 };
+
+export type Bucket = { sessions: number; net: number; hours: number; hourly: number };
+
+// My own split: sitting down before 3pm counts as an early session.
+export const EARLY_CUTOFF = "15:00";
 
 export function computeStats(input: StatSession[]): DashboardStats {
   const sessions = [...input].sort(
@@ -24,6 +31,8 @@ export function computeStats(input: StatSession[]): DashboardStats {
   let wins = 0;
   const cumulative: DashboardStats["cumulative"] = [];
   const months = new Map<string, { net: number; hours: number }>();
+  const early = { sessions: 0, net: 0, hours: 0 };
+  const late = { sessions: 0, net: 0, hours: 0 };
 
   for (const s of sessions) {
     const net = sessionNet(s);
@@ -37,7 +46,12 @@ export function computeStats(input: StatSession[]): DashboardStats {
     m.net += net;
     m.hours += hours;
     months.set(key, m);
+    const b = s.start_time.slice(0, 5) < EARLY_CUTOFF ? early : late;
+    b.sessions += 1;
+    b.net += net;
+    b.hours += hours;
   }
+  const bucket = (b: typeof early): Bucket => ({ ...b, hourly: b.hours > 0 ? b.net / b.hours : 0 });
 
   const byMonth = [...months.entries()].map(([month, m]) => ({ month, ...m }));
   const bestMonth = byMonth.reduce<DashboardStats["bestMonth"]>(
@@ -54,5 +68,6 @@ export function computeStats(input: StatSession[]): DashboardStats {
     bestMonth,
     cumulative,
     byMonth,
+    byStart: { early: bucket(early), late: bucket(late) },
   };
 }

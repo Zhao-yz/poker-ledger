@@ -17,3 +17,15 @@ describe("dashboard hourly rate", () => {
     expect(stats.hourly).toBe(100); // 800 ÷ 8, not (200 + −66.67) ÷ 2 = 66.67
   });
 });
+
+describe("early vs. late start", () => {
+  it("splits at 3pm and computes each side's hourly", () => {
+    const { byStart } = computeStats([
+      { played_on: "2026-10-03", start_time: "11:00", end_time: "21:00", net: 500 },
+      { played_on: "2026-10-04", start_time: "14:59", end_time: "20:59", net: 100 },
+      { played_on: "2026-10-05", start_time: "15:00", end_time: "23:00", net: -400 },
+    ]);
+    expect(byStart.early).toEqual({ sessions: 2, net: 600, hours: 16, hourly: 37.5 });
+    expect(byStart.late).toEqual({ sessions: 1, net: -400, hours: 8, hourly: -50 });
+  });
+});
