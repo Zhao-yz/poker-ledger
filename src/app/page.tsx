@@ -1,18 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email;
-
-  return (
-    <section className="rounded-xl border border-border bg-card p-6">
-      <h1 className="text-xl font-semibold">Hi, {name}</h1>
-      <p className="mt-2 text-sm text-muted">
-        You&apos;re logged in. Sessions, hands and your dashboard arrive in the next PRs.
-      </p>
-    </section>
-  );
+// The dashboard becomes the home page in a later PR; until then, land on the session list.
+export default function Home() {
+  redirect("/sessions");
 }
