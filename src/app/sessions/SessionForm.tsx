@@ -39,7 +39,8 @@ export function SessionForm({ venues, session, action, submitLabel, cancelHref }
   const [state, formAction, pending] = useActionState(action, {});
   // After a rejected save, show what the user typed rather than the original values.
   const v = state.values ?? initialValues(session);
-  const e = state.fieldErrors ?? {};
+  // Hide the previous round's errors while a new save is in flight.
+  const e = pending ? {} : (state.fieldErrors ?? {});
   const cls = (bad?: string) => `${inputClass} mt-1 ${bad ? "border-loss" : ""}`;
 
   return (
@@ -99,7 +100,7 @@ export function SessionForm({ venues, session, action, submitLabel, cancelHref }
         Notes
         <textarea name="notes" rows={3} defaultValue={v.notes} className={cls()} />
       </label>
-      {state.error && (
+      {state.error && !pending && (
         <p role="alert" className="rounded-md bg-loss/10 px-3 py-2 text-sm text-loss sm:col-span-2">
           {state.error}
         </p>

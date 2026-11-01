@@ -2,15 +2,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, formatTime, sessionHours, sessionNet, type Session } from "@/lib/sessions";
-import { DeleteSessionButton } from "./DeleteSessionButton";
+import type { Hand } from "@/lib/hands";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
+import { deleteSession } from "../actions";
+import { addHand } from "../../hands/actions";
+import { HandForm } from "../../hands/HandForm";
+import { HandList } from "../../hands/HandList";
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
   // Row-level security returns nothing for another user's session, so it shows as not found.
-  const { data } = await supabase.from("sessions").select("*, venues(name)").eq("id", Number(id)).maybeSingle();
+  const [{ data }, { data: handRows }] = await Promise.all([
+    supabase.from("sessions").select("*, venues(name)").eq("id", Number(id)).maybeSingle(),
+    supabase.from("hands").select("*").eq("session_id", Number(id)).order("created_at"),
+  ]);
   if (!data) notFound();
   const s = data as Session;
+  const hands = (handRows ?? []) as Hand[];
   const net = sessionNet(s);
   const hours = sessionHours(s.start_time, s.end_time);
 
@@ -49,8 +58,18 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
           <Link href={`/sessions/${s.id}/edit`} className="rounded-md border border-border px-4 py-2 text-sm hover:bg-background">
             Edit
           </Link>
-          <DeleteSessionButton id={s.id} />
+          <ConfirmDelete
+            message="Are you sure? This also deletes the session's hands."
+            action={deleteSession.bind(null, s.id)}
+          />
         </div>
+      </div>
+
+      <h2 className="pt-2 text-lg font-semibold">Hands ({hands.length})</h2>
+      <HandList hands={hands} />
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h3 className="mb-3 text-sm font-semibold text-muted">Add a hand</h3>
+        <HandForm action={addHand.bind(null, s.id)} submitLabel="Add hand" />
       </div>
     </section>
   );
