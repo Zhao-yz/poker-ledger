@@ -1,6 +1,6 @@
 import { sessionHours, sessionNet, type Session } from "./sessions";
 
-type StatSession = Pick<Session, "played_on" | "start_time" | "end_time" | "buy_in" | "cash_out">;
+type StatSession = Pick<Session, "played_on" | "start_time" | "end_time" | "net">;
 
 export type DashboardStats = {
   sessions: number;

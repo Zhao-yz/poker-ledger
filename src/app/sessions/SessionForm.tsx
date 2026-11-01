@@ -25,8 +25,9 @@ function initialValues(session?: Session): SessionInput {
     start_time: session?.start_time?.slice(0, 5) ?? "",
     end_time: session?.end_time?.slice(0, 5) ?? "",
     stakes: session?.stakes ?? "",
-    buy_in: session ? String(session.buy_in) : "",
-    cash_out: session ? String(session.cash_out) : "",
+    net: session ? String(session.net) : "",
+    buy_in: session?.buy_in == null ? "" : String(session.buy_in),
+    cash_out: session?.cash_out == null ? "" : String(session.cash_out),
     notes: session?.notes ?? "",
   };
 }
@@ -86,13 +87,19 @@ export function SessionForm({ venues, session, action, submitLabel, cancelHref }
         <input name="end_time" type="time" defaultValue={v.end_time} className={cls(e.end_time)} />
         <FieldError message={e.end_time} />
       </label>
+      <label className="text-sm sm:col-span-2">
+        Net result ($) *{" "}
+        <span className="text-muted">(e.g. -1400 or 2700; worked out for you if you fill in buy-in and cash-out)</span>
+        <input name="net" type="number" step="1" defaultValue={v.net} className={cls(e.net)} />
+        <FieldError message={e.net} />
+      </label>
       <label className="text-sm">
-        Buy-in ($) *
+        Buy-in ($) <span className="text-muted">(optional)</span>
         <input name="buy_in" type="number" min="0" step="1" defaultValue={v.buy_in} className={cls(e.buy_in)} />
         <FieldError message={e.buy_in} />
       </label>
       <label className="text-sm">
-        Cash-out ($) *
+        Cash-out ($) <span className="text-muted">(optional)</span>
         <input name="cash_out" type="number" min="0" step="1" defaultValue={v.cash_out} className={cls(e.cash_out)} />
         <FieldError message={e.cash_out} />
       </label>

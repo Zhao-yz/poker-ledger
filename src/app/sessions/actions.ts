@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { validateSession, type FieldErrors, type SessionInput } from "@/lib/validation";
+import { resolveNet, validateSession, type FieldErrors, type SessionInput } from "@/lib/validation";
 
 // `values` echoes what was typed, so a rejected form keeps the user's input.
 export type SessionFormState = { error?: string; fieldErrors?: FieldErrors; values?: SessionInput };
@@ -17,6 +17,7 @@ function readInput(formData: FormData): SessionInput {
     start_time: f("start_time"),
     end_time: f("end_time"),
     stakes: f("stakes"),
+    net: f("net"),
     buy_in: f("buy_in"),
     cash_out: f("cash_out"),
     notes: f("notes"),
@@ -43,8 +44,9 @@ function toRow(input: SessionInput, venueId: number) {
     start_time: input.start_time,
     end_time: input.end_time,
     stakes: input.stakes || null,
-    buy_in: Number(input.buy_in),
-    cash_out: Number(input.cash_out),
+    net: resolveNet(input),
+    buy_in: input.buy_in === "" ? null : Number(input.buy_in),
+    cash_out: input.cash_out === "" ? null : Number(input.cash_out),
     notes: input.notes || null,
   };
 }
