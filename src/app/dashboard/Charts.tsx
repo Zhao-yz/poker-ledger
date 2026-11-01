@@ -23,12 +23,6 @@ const LOSS = "#e5534b";
 const GRID = "#26302b";
 const AXIS = "#8a978f";
 
-// Always keep $0 on the axis so a losing month reads as below zero, even with one data point.
-const withZero: [(min: number) => number, (max: number) => number] = [
-  (min) => Math.min(0, min),
-  (max) => Math.max(0, max),
-];
-
 const tooltipStyle = {
   background: "#0b0f0d",
   border: "1px solid #26302b",
@@ -48,10 +42,10 @@ export function CumulativeChart({ data }: { data: DashboardStats["cumulative"] }
           tickLine={false}
           axisLine={false}
           width={64}
-          domain={withZero}
           tickFormatter={(v: number) => formatMoney(v)}
         />
-        <ReferenceLine y={0} stroke={AXIS} strokeDasharray="3 3" />
+        {/* extendDomain keeps $0 on the axis (even with one data point) without breaking Recharts' round tick values. */}
+        <ReferenceLine y={0} stroke={AXIS} strokeDasharray="3 3" ifOverflow="extendDomain" />
         <Tooltip
           contentStyle={tooltipStyle}
           cursor={{ stroke: AXIS, strokeWidth: 1 }}
@@ -61,7 +55,7 @@ export function CumulativeChart({ data }: { data: DashboardStats["cumulative"] }
             return p ? `${label} · session ${formatMoney(p.net)}` : String(label);
           }}
         />
-        <Line type="monotone" dataKey="cumulative" stroke={GAIN} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+        <Line type="linear" dataKey="cumulative" stroke={GAIN} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -78,10 +72,9 @@ export function MonthlyChart({ data }: { data: DashboardStats["byMonth"] }) {
           tickLine={false}
           axisLine={false}
           width={64}
-          domain={withZero}
           tickFormatter={(v: number) => formatMoney(v)}
         />
-        <ReferenceLine y={0} stroke={AXIS} />
+        <ReferenceLine y={0} stroke={AXIS} ifOverflow="extendDomain" />
         <Tooltip
           contentStyle={tooltipStyle}
           cursor={{ fill: "rgba(255,255,255,0.04)" }}

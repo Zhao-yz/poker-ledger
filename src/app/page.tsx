@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Session } from "@/lib/sessions";
-import { computeStats } from "@/lib/stats";
+import { computeStats, type Bucket } from "@/lib/stats";
 import { CumulativeChart, MonthlyChart } from "./dashboard/Charts";
 
 function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -10,6 +10,18 @@ function Tile({ label, value, sub }: { label: string; value: string; sub?: strin
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
       {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
+    </div>
+  );
+}
+
+function StartBucket({ title, b }: { title: string; b: Bucket }) {
+  return (
+    <div className="flex-1 rounded-lg border border-border p-4">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="mt-2 text-2xl font-semibold">{b.sessions ? `${formatMoney(b.hourly)}/h` : "—"}</p>
+      <p className="mt-1 text-xs text-muted">
+        {b.sessions} session{b.sessions === 1 ? "" : "s"} · {b.hours.toFixed(0)}h · net {formatMoney(b.net)}
+      </p>
     </div>
   );
 }
@@ -48,6 +60,14 @@ export default async function Dashboard() {
           value={stats.bestMonth ? formatMoney(stats.bestMonth.net) : "—"}
           sub={stats.bestMonth ? monthLabel(stats.bestMonth.month) : undefined}
         />
+      </div>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">Early vs. late start</h2>
+        <p className="mb-3 text-xs text-muted">My rule: sit down before 3pm. Does the data agree?</p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <StartBucket title="Started before 3pm" b={stats.byStart.early} />
+          <StartBucket title="Started 3pm or later" b={stats.byStart.late} />
+        </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-4">
         <h2 className="mb-2 text-sm font-semibold">Running total</h2>
