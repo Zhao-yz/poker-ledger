@@ -3,52 +3,75 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { validateSession, type FieldErrors, type SessionInput } from "@/lib/validation";
 
-export type SessionFormState = { error?: string };
+// `values` echoes what was typed, so a rejected form keeps the user's input.
+export type SessionFormState = { error?: string; fieldErrors?: FieldErrors; values?: SessionInput };
 
-function field(formData: FormData, name: string) {
-  return String(formData.get(name) ?? "").trim();
+function readInput(formData: FormData): SessionInput {
+  const f = (name: string) => String(formData.get(name) ?? "").trim();
+  return {
+    played_on: f("played_on"),
+    venue_id: f("venue_id"),
+    new_venue: f("new_venue"),
+    start_time: f("start_time"),
+    end_time: f("end_time"),
+    stakes: f("stakes"),
+    buy_in: f("buy_in"),
+    cash_out: f("cash_out"),
+    notes: f("notes"),
+  };
 }
 
 // Uses the venue picked in the dropdown, or creates one from the "new venue" box.
-async function resolveVenueId(formData: FormData): Promise<number | null> {
+async function resolveVenueId(input: SessionInput): Promise<number> {
   const supabase = await createClient();
-  const newVenue = field(formData, "new_venue");
-  if (newVenue) {
-    const { data: existing } = await supabase.from("venues").select("id").eq("name", newVenue).maybeSingle();
+  if (input.new_venue) {
+    const { data: existing } = await supabase.from("venues").select("id").eq("name", input.new_venue).maybeSingle();
     if (existing) return existing.id;
-    const { data, error } = await supabase.from("venues").insert({ name: newVenue }).select("id").single();
+    const { data, error } = await supabase.from("venues").insert({ name: input.new_venue }).select("id").single();
     if (error) throw error;
     return data.id;
   }
-  const picked = Number(field(formData, "venue_id"));
-  return Number.isFinite(picked) && picked > 0 ? picked : null;
+  return Number(input.venue_id);
 }
 
-function readSession(formData: FormData, venueId: number | null) {
+function toRow(input: SessionInput, venueId: number) {
   return {
     venue_id: venueId,
-    played_on: field(formData, "played_on"),
-    start_time: field(formData, "start_time"),
-    end_time: field(formData, "end_time"),
-    stakes: field(formData, "stakes") || null,
-    buy_in: Number(field(formData, "buy_in")),
-    cash_out: Number(field(formData, "cash_out")),
-    notes: field(formData, "notes") || null,
+    played_on: input.played_on,
+    start_time: input.start_time,
+    end_time: input.end_time,
+    stakes: input.stakes || null,
+    buy_in: Number(input.buy_in),
+    cash_out: Number(input.cash_out),
+    notes: input.notes || null,
   };
+}
+
+async function checkAndSave(
+  formData: FormData,
+  save: (row: ReturnType<typeof toRow>) => Promise<{ id?: number; error?: string }>,
+): Promise<SessionFormState | { id: number }> {
+  const input = readInput(formData);
+  const fieldErrors = validateSession(input);
+  if (Object.keys(fieldErrors).length > 0) {
+    return { error: "Fix the highlighted fields and save again.", fieldErrors, values: input };
+  }
+  const result = await save(toRow(input, await resolveVenueId(input)));
+  if (result.error || !result.id) return { error: "Couldn't save the session. Try again.", values: input };
+  return { id: result.id };
 }
 
 export async function createSession(_prev: SessionFormState, formData: FormData): Promise<SessionFormState> {
   const supabase = await createClient();
-  const venueId = await resolveVenueId(formData);
-  const { data, error } = await supabase
-    .from("sessions")
-    .insert(readSession(formData, venueId))
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
+  const out = await checkAndSave(formData, async (row) => {
+    const { data, error } = await supabase.from("sessions").insert(row).select("id").single();
+    return { id: data?.id, error: error?.message };
+  });
+  if (!("id" in out)) return out;
   revalidatePath("/sessions");
-  redirect(`/sessions/${data.id}`);
+  redirect(`/sessions/${out.id}`);
 }
 
 export async function updateSession(
@@ -57,9 +80,11 @@ export async function updateSession(
   formData: FormData,
 ): Promise<SessionFormState> {
   const supabase = await createClient();
-  const venueId = await resolveVenueId(formData);
-  const { error } = await supabase.from("sessions").update(readSession(formData, venueId)).eq("id", id);
-  if (error) return { error: error.message };
+  const out = await checkAndSave(formData, async (row) => {
+    const { error } = await supabase.from("sessions").update(row).eq("id", id);
+    return { id, error: error?.message };
+  });
+  if (!("id" in out)) return out;
   revalidatePath("/sessions");
   revalidatePath(`/sessions/${id}`);
   redirect(`/sessions/${id}`);
