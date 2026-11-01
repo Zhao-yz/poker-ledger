@@ -43,7 +43,7 @@ describe.skipIf(!ready)("data isolation", () => {
     const { data: venue } = await userA.from("venues").upsert({ name: "M8trix" }, { onConflict: "user_id,name" }).select("id").single();
     const { data: session, error } = await userA
       .from("sessions")
-      .insert({ venue_id: venue!.id, played_on: "2026-10-30", start_time: "11:00", end_time: "02:00", buy_in: 520, cash_out: 240, notes: marker })
+      .insert({ venue_id: venue!.id, played_on: "2026-10-30", start_time: "11:00", end_time: "02:00", net: -280, buy_in: 520, cash_out: 240, notes: marker })
       .select("id")
       .single();
     if (error) throw error;
@@ -73,9 +73,9 @@ describe.skipIf(!ready)("data isolation", () => {
   });
 
   it("User B cannot edit or delete User A's session", async () => {
-    await userB.from("sessions").update({ cash_out: 99999 }).eq("id", sessionId);
+    await userB.from("sessions").update({ notes: "changed by B" }).eq("id", sessionId);
     await userB.from("sessions").delete().eq("id", sessionId);
-    const { data } = await userA.from("sessions").select("cash_out").eq("id", sessionId).single();
-    expect(Number(data!.cash_out)).toBe(240);
+    const { data } = await userA.from("sessions").select("notes").eq("id", sessionId).single();
+    expect(data!.notes).toBe(marker);
   });
 });

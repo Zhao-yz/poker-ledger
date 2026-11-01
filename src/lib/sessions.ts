@@ -1,5 +1,4 @@
-// Shared types and calculations for sessions. Net and hours are always computed here,
-// never stored, so they can't drift from buy-in, cash-out and the times.
+// Shared types and calculations for sessions. Hours are always computed from the times, never stored.
 
 export type Venue = { id: number; name: string; city: string | null };
 
@@ -10,8 +9,9 @@ export type Session = {
   start_time: string; // HH:MM or HH:MM:SS
   end_time: string;
   stakes: string | null;
-  buy_in: number;
-  cash_out: number;
+  net: number;
+  buy_in: number | null;
+  cash_out: number | null;
   notes: string | null;
   venues?: { name: string } | null;
 };
@@ -28,8 +28,9 @@ export function sessionHours(start: string, end: string): number {
   return minutes / 60;
 }
 
-export function sessionNet(s: Pick<Session, "buy_in" | "cash_out">): number {
-  return Number(s.cash_out) - Number(s.buy_in);
+/** Net result. Stored directly because many logged sessions only have the net, not buy-in and cash-out. */
+export function sessionNet(s: Pick<Session, "net">): number {
+  return Number(s.net);
 }
 
 export function formatMoney(n: number): string {

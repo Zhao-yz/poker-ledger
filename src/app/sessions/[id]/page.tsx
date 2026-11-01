@@ -44,11 +44,11 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         <dl className="mt-6 grid grid-cols-3 gap-4 text-sm">
           <div>
             <dt className="text-muted">Buy-in</dt>
-            <dd>${Number(s.buy_in).toLocaleString()}</dd>
+            <dd>{s.buy_in == null ? "—" : `$${Number(s.buy_in).toLocaleString()}`}</dd>
           </div>
           <div>
             <dt className="text-muted">Cash-out</dt>
-            <dd>${Number(s.cash_out).toLocaleString()}</dd>
+            <dd>{s.cash_out == null ? "—" : `$${Number(s.cash_out).toLocaleString()}`}</dd>
           </div>
           <div>
             <dt className="text-muted">Hourly</dt>

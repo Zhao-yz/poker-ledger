@@ -21,7 +21,7 @@ function monthLabel(ym: string) {
 
 export default async function Dashboard() {
   const supabase = await createClient();
-  const { data } = await supabase.from("sessions").select("played_on, start_time, end_time, buy_in, cash_out");
+  const { data } = await supabase.from("sessions").select("played_on, start_time, end_time, net");
   const stats = computeStats((data ?? []) as Session[]);
 
   if (stats.sessions === 0) {
