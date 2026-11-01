@@ -1,17 +1,21 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/sessions";
 import type { Hand } from "@/lib/hands";
+import { StarButton } from "../stars/StarButton";
 
-// One row per hand: cards and position, title, result. Used on a session page and later on the starred page.
-export function HandList({ hands, showSession = false }: { hands: Hand[]; showSession?: boolean }) {
+type Props = { hands: Hand[]; starred: Set<number>; showSession?: boolean; emptyText?: string };
+
+// One row per hand: star, cards and position, title, result. Used on session pages and the Starred page.
+export function HandList({ hands, starred, showSession = false, emptyText = "No hands yet." }: Props) {
   if (hands.length === 0) {
-    return <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">No hands yet.</p>;
+    return <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">{emptyText}</p>;
   }
   return (
     <ul className="divide-y divide-border rounded-xl border border-border bg-card">
       {hands.map((h) => (
-        <li key={h.id}>
-          <Link href={`/hands/${h.id}`} className="flex items-center gap-4 px-4 py-3 hover:bg-background">
+        <li key={h.id} className="flex items-center gap-3 pl-4">
+          <StarButton handId={h.id} starred={starred.has(h.id)} />
+          <Link href={`/hands/${h.id}`} className="flex flex-1 items-center gap-4 py-3 pr-4 hover:bg-background">
             <span className="w-20 font-mono text-sm">{h.hole_cards ?? "—"}</span>
             <span className="w-12 text-xs text-muted">{h.position ?? ""}</span>
             <span className="flex-1">

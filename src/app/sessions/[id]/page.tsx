@@ -8,14 +8,16 @@ import { deleteSession } from "../actions";
 import { addHand } from "../../hands/actions";
 import { HandForm } from "../../hands/HandForm";
 import { HandList } from "../../hands/HandList";
+import { starredHandIds } from "@/lib/stars";
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
   // Row-level security returns nothing for another user's session, so it shows as not found.
-  const [{ data }, { data: handRows }] = await Promise.all([
+  const [{ data }, { data: handRows }, starred] = await Promise.all([
     supabase.from("sessions").select("*, venues(name)").eq("id", Number(id)).maybeSingle(),
     supabase.from("hands").select("*").eq("session_id", Number(id)).order("created_at"),
+    starredHandIds(),
   ]);
   if (!data) notFound();
   const s = data as Session;
@@ -66,7 +68,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <h2 className="pt-2 text-lg font-semibold">Hands ({hands.length})</h2>
-      <HandList hands={hands} />
+      <HandList hands={hands} starred={starred} />
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="mb-3 text-sm font-semibold text-muted">Add a hand</h3>
         <HandForm action={addHand.bind(null, s.id)} submitLabel="Add hand" />
