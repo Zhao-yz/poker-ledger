@@ -5,6 +5,8 @@ import { formatMoney } from "@/lib/sessions";
 import type { Hand } from "@/lib/hands";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { deleteHand } from "../actions";
+import { starredHandIds } from "@/lib/stars";
+import { StarButton } from "../../stars/StarButton";
 
 export default async function HandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,6 +18,7 @@ export default async function HandDetailPage({ params }: { params: Promise<{ id:
     .maybeSingle();
   if (!data) notFound();
   const h = data as Hand;
+  const starred = (await starredHandIds()).has(h.id);
 
   return (
     <section className="space-y-4">
@@ -28,7 +31,10 @@ export default async function HandDetailPage({ params }: { params: Promise<{ id:
             <p className="font-mono text-sm text-muted">
               {[h.hole_cards, h.position].filter(Boolean).join(" · ") || "No cards recorded"}
             </p>
-            <h1 className="mt-1 text-xl font-semibold">{h.title}</h1>
+            <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold">
+              <StarButton handId={h.id} starred={starred} />
+              {h.title}
+            </h1>
           </div>
           {h.result != null && (
             <p className={`text-2xl font-semibold ${Number(h.result) >= 0 ? "text-win" : "text-loss"}`}>

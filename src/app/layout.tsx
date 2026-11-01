@@ -43,6 +43,9 @@ export default async function RootLayout({
                 <Link href="/sessions" className="text-muted hover:text-foreground">
                   Sessions
                 </Link>
+                <Link href="/starred" className="text-muted hover:text-foreground">
+                  Starred
+                </Link>
                 <span className="ml-auto text-muted">{user.email}</span>
                 <form action={logout}>
                   <button className="rounded-md border border-border px-3 py-1 hover:bg-background">
