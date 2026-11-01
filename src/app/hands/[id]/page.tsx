@@ -8,8 +8,15 @@ import { deleteHand } from "../actions";
 import { starredHandIds } from "@/lib/stars";
 import { StarButton } from "../../stars/StarButton";
 
-export default async function HandDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function HandDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { id } = await params;
+  const { from } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("hands")
@@ -22,6 +29,14 @@ export default async function HandDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <section className="space-y-4">
+      {from === "random" && (
+        <p className="flex items-center justify-between rounded-md bg-card px-3 py-2 text-sm text-muted">
+          🎲 Picked at random from your starred hands.
+          <Link href="/review/random" prefetch={false} className="text-felt-bright hover:underline">
+            Another one →
+          </Link>
+        </p>
+      )}
       <Link href={`/sessions/${h.session_id}`} className="text-sm text-muted hover:text-foreground">
         ← {h.sessions?.played_on} · {h.sessions?.venues?.name}
       </Link>
