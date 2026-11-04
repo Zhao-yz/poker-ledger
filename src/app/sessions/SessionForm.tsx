@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { todayInAppZone } from "@/lib/dates";
 import type { Session, Venue } from "@/lib/sessions";
-import type { SessionInput } from "@/lib/validation";
+import { workedOutNet, type FieldErrors, type SessionInput } from "@/lib/validation";
 import type { SessionFormState } from "./actions";
 
 export const inputClass =
@@ -35,6 +35,63 @@ function initialValues(session?: Session): SessionInput {
 
 function FieldError({ message }: { message?: string }) {
   return message ? <span className="mt-1 block text-xs text-loss">{message}</span> : null;
+}
+
+// Net follows buy-in and cash-out as you type, so correcting one number can't leave it out of date.
+function AmountFields({ v, e, cls }: { v: SessionInput; e: FieldErrors; cls: (bad?: string) => string }) {
+  const [buyIn, setBuyIn] = useState(v.buy_in);
+  const [cashOut, setCashOut] = useState(v.cash_out);
+  const [typedNet, setTypedNet] = useState(v.net);
+  const worked = workedOutNet(buyIn, cashOut);
+
+  return (
+    <>
+      <label className="text-sm sm:col-span-2">
+        Net result ($) *{" "}
+        <span className="text-muted">
+          {worked === null
+            ? "(e.g. -1400 or 2700; or fill in buy-in and cash-out below)"
+            : "(worked out from buy-in and cash-out)"}
+        </span>
+        <input
+          name="net"
+          type="number"
+          step="1"
+          value={worked ?? typedNet}
+          readOnly={worked !== null}
+          onChange={(event) => setTypedNet(event.target.value)}
+          className={cls(e.net)}
+        />
+        <FieldError message={e.net} />
+      </label>
+      <label className="text-sm">
+        Buy-in ($) <span className="text-muted">(optional)</span>
+        <input
+          name="buy_in"
+          type="number"
+          min="0"
+          step="1"
+          value={buyIn}
+          onChange={(event) => setBuyIn(event.target.value)}
+          className={cls(e.buy_in)}
+        />
+        <FieldError message={e.buy_in} />
+      </label>
+      <label className="text-sm">
+        Cash-out ($) <span className="text-muted">(optional)</span>
+        <input
+          name="cash_out"
+          type="number"
+          min="0"
+          step="1"
+          value={cashOut}
+          onChange={(event) => setCashOut(event.target.value)}
+          className={cls(e.cash_out)}
+        />
+        <FieldError message={e.cash_out} />
+      </label>
+    </>
+  );
 }
 
 export function SessionForm({ venues, session, action, submitLabel, cancelHref }: Props) {
@@ -88,22 +145,7 @@ export function SessionForm({ venues, session, action, submitLabel, cancelHref }
         <input name="end_time" type="time" defaultValue={v.end_time} className={cls(e.end_time)} />
         <FieldError message={e.end_time} />
       </label>
-      <label className="text-sm sm:col-span-2">
-        Net result ($) *{" "}
-        <span className="text-muted">(e.g. -1400 or 2700; worked out for you if you fill in buy-in and cash-out)</span>
-        <input name="net" type="number" step="1" defaultValue={v.net} className={cls(e.net)} />
-        <FieldError message={e.net} />
-      </label>
-      <label className="text-sm">
-        Buy-in ($) <span className="text-muted">(optional)</span>
-        <input name="buy_in" type="number" min="0" step="1" defaultValue={v.buy_in} className={cls(e.buy_in)} />
-        <FieldError message={e.buy_in} />
-      </label>
-      <label className="text-sm">
-        Cash-out ($) <span className="text-muted">(optional)</span>
-        <input name="cash_out" type="number" min="0" step="1" defaultValue={v.cash_out} className={cls(e.cash_out)} />
-        <FieldError message={e.cash_out} />
-      </label>
+      <AmountFields v={v} e={e} cls={cls} />
       <label className="text-sm sm:col-span-2">
         Notes
         <textarea name="notes" rows={3} defaultValue={v.notes} className={cls()} />

@@ -29,6 +29,13 @@ export function resolveNet(input: Pick<SessionInput, "net" | "buy_in" | "cash_ou
   return null;
 }
 
+/** Net worked out from buy-in and cash-out for the form to show, or null until both are valid. */
+export function workedOutNet(buyIn: string, cashOut: string): string | null {
+  if (!isNumber(buyIn) || !isNumber(cashOut)) return null;
+  if (Number(buyIn) < 0 || Number(cashOut) < 0) return null;
+  return String(Number(cashOut) - Number(buyIn));
+}
+
 /** Checks a submitted session form. Returns one friendly message per problem field. */
 export function validateSession(input: SessionInput, today = todayInAppZone()): FieldErrors {
   const errors: FieldErrors = {};
