@@ -64,7 +64,22 @@ Dark mode by default, poker-felt green (#0f5132) accents on a near-black backgro
 
 ## Plan vs. Reality
 
-(Filled in at the end; the plan above stays as written.)
+The plan above stays as written.
 
 | Planned feature | Shipped / Changed / Cut | Status (Done/Backlogged) | Learning | What changed and why (one line) |
 | --- | --- | --- | --- | --- |
+| 1. Sign up and login | Shipped | Done | Turning off email confirmation keeps a first-time sign-up to one step | Built as planned (PR #4) |
+| 2. Data model | Changed | Done | A plan can contradict itself; the agent has to pick a side unless you do | Section 3's text said venues had no user_id but its table listed one; venues became per user (PR #6) |
+| 3. Sessions CRUD | Changed | Done | Design the schema from the data you really have | Net result became the required field and buy-in and cash-out optional, because only 15 of 37 journaled sessions recorded both (PR #22) |
+| 4. Validation | Changed | Done | Rules written from memory can break on real data | "End before start" became "end can't equal start, max 18 hours", because most sessions run past midnight (PR #10); required fields follow PR #22 |
+| 5. Hands inside a session | Shipped | Done | Hiding old errors during a save matters as much as showing them | Built as planned, with a fix so old errors clear while saving (PR #12) |
+| 6. Stars | Shipped | Done | A junction table keeps "my short list" simple | Built as planned (PR #14) |
+| 7. Find things | Shipped | Done | Filters in the URL make a view bookmarkable | Built as planned, plus biggest-loss and oldest sorts (PR #16) |
+| 8. Dashboard | Changed | Done | Check colors for color blindness, not only for taste | Chart colors moved from the planned red/green to blue/red after a color-blindness check failed; added a net-by-month chart (PR #18) |
+| 9. CSV import | Changed | Done | Filling a column with a default is making data up | Imported 69 sessions since 2026-05-23, not all 80+; the default stakes column was removed because some stakes weren't recorded (PR #24) |
+| 10. Early vs. late start | Shipped | Done | Testing the 14:59 / 15:00 edge pins down the rule | Built as planned (PR #26) |
+| 11. Random review | Shipped | Done | An empty state needs its own path | Built as planned, picking from starred hands (PR #28) |
+| Section 6 design: white cards | Changed | Done | A dark theme and white cards fight each other | Cards shipped dark to match the near-black background (visible in the live app) |
+| Not planned: session date default | Added after testing | Done | Dates from UTC go wrong every evening, and nothing warns you | The form defaulted to tomorrow after 4pm Pacific; the first-time user test caught it (PR #32) |
+| Not planned: net follows buy-in and cash-out | Added after testing | Done | A rule that protects data can also block a simple correction | Editing a cash-out was blocked by the old net; net now updates as you type (PR #34) |
+| Not planned: separate board and betting-action fields for hands | Backlogged | Backlogged | Free-text notes are enough for now | The first-time user looked for them; notes cover it until I want to search by board |
