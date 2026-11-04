@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { todayInAppZone } from "@/lib/dates";
 import type { Session, Venue } from "@/lib/sessions";
 import type { SessionInput } from "@/lib/validation";
 import type { SessionFormState } from "./actions";
@@ -19,7 +20,7 @@ type Props = {
 
 function initialValues(session?: Session): SessionInput {
   return {
-    played_on: session?.played_on ?? new Date().toISOString().slice(0, 10),
+    played_on: session?.played_on ?? todayInAppZone(),
     venue_id: session ? String(session.venue_id) : "",
     new_venue: "",
     start_time: session?.start_time?.slice(0, 5) ?? "",
