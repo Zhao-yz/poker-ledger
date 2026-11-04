@@ -16,7 +16,7 @@ Built for MBA 296C (Intro to Coding for MBAs) as the solo app. The plan is in [P
 - **Dashboard:** total net, hourly rate (total net ÷ total hours), % winning sessions, best month, early vs. late start, running-total and net-by-month charts.
 - **Import:** upload a CSV of past sessions with a preview, validation and duplicate skipping.
 
-My own data in the live app is real, but every dollar amount is divided by 5 for privacy. Dates, venues, hours and hands are unchanged.
+My own data in the live app comes from real sessions, but dollar amounts and session hours are adjusted for privacy, so treat them and the hourly rates as approximate. Dates, venues and hands are unchanged.
 
 ## Tools
 
