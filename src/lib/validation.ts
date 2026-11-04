@@ -1,3 +1,4 @@
+import { todayInAppZone } from "./dates";
 import { sessionHours } from "./sessions";
 
 export type SessionInput = {
@@ -29,7 +30,7 @@ export function resolveNet(input: Pick<SessionInput, "net" | "buy_in" | "cash_ou
 }
 
 /** Checks a submitted session form. Returns one friendly message per problem field. */
-export function validateSession(input: SessionInput, today = new Date().toISOString().slice(0, 10)): FieldErrors {
+export function validateSession(input: SessionInput, today = todayInAppZone()): FieldErrors {
   const errors: FieldErrors = {};
 
   if (!input.played_on) errors.played_on = "Pick the date you played.";
